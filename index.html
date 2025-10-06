@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat de Juan 🤖</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>Bienvenido al Chat de Juan Jara</h1>
+    <p>Puedes hacer preguntas sobre el documento cargado en Google Cloud.</p>
+  </header>
+
+  <link rel="stylesheet" href="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/themes/df-messenger-default.css">
+    <script src="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/df-messenger.js"></script>
+        <df-messenger
+            project-id="trabajoclasse"
+            agent-id="c709783b-2e3c-46b3-bca7-07777308a292"
+            language-code="es"
+            max-query-length="-1">
+        <df-messenger-chat-bubble
+            chat-title="jaunito">
+        </df-messenger-chat-bubble>
+        </df-messenger>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0d0d0d, #1a1a1a); /* fondo oscuro */
+            text-align: center;
+            padding-top: 80px;
+            color: #f0f0f0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: background 0.5s ease;
+        }
+
+        body:hover {
+            background: linear-gradient(135deg, #1a1a1a, #333333);
+        }
+
+        h1 {
+            color: #ff6f61; /* naranja vibrante */
+            font-size: 3em;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            transition: transform 0.3s ease, color 0.3s ease;
+        }
+
+        h1:hover {
+            color: #ffca28; /* amarillo brillante */
+            transform: scale(1.1);
+        }
+
+        p {
+            font-size: 1.2em;
+            color: #b0bec5; /* gris claro */
+            line-height: 1.6;
+            max-width: 600px;
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.3);
+            transition: color 0.3s ease;
+        }
+
+        p:hover {
+            color: #ff6f61; /* naranja al pasar el mouse */
+        }
+
+
+
+
+        df-messenger {
+            z-index: 999;
+            position: fixed;
+            --df-messenger-font-color: #000;
+            --df-messenger-font-family: Google Sans;
+            --df-messenger-chat-background: #f3f6fc;
+            --df-messenger-message-user-background: #d3e3fd;
+            --df-messenger-message-bot-background: #fff;
+            bottom: 16px;
+            right: 16px;
+        }
+    </style>
+
+
+</body>
+</html>
