@@ -84,6 +84,88 @@
         }
     </style>
 
+  <!-- 🎙️ Script de micrófono -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!recognition) {
+    alert("Tu navegador no soporta reconocimiento de voz.");
+    return;
+  }
+
+  const recognizer = new recognition();
+  recognizer.lang = "es-ES";
+  recognizer.continuous = false;
+  recognizer.interimResults = false;
+
+  // Crear el botón del micrófono
+  const micBtn = document.createElement("button");
+  micBtn.innerHTML = "🎤 Hablar";
+  micBtn.style.position = "fixed";
+  micBtn.style.bottom = "90px";
+  micBtn.style.right = "25px";
+  micBtn.style.padding = "10px 15px";
+  micBtn.style.borderRadius = "50px";
+  micBtn.style.border = "none";
+  micBtn.style.background = "#ff6f61";
+  micBtn.style.color = "white";
+  micBtn.style.cursor = "pointer";
+  micBtn.style.boxShadow = "0px 4px 8px rgba(0,0,0,0.3)";
+  micBtn.title = "Haz clic para hablar";
+  document.body.appendChild(micBtn);
+
+  let isListening = false;
+
+  micBtn.addEventListener("click", () => {
+    if (!isListening) {
+      recognizer.start();
+      micBtn.style.background = "#ffca28";
+      micBtn.innerHTML = "🎙️ Escuchando...";
+    } else {
+      recognizer.stop();
+      micBtn.style.background = "#ff6f61";
+      micBtn.innerHTML = "🎤 Hablar";
+    }
+    isListening = !isListening;
+  });
+
+  recognizer.onresult = (event) => {
+    const text = event.results[0][0].transcript;
+    console.log("Reconocido:", text);
+
+    // Buscar el input del chat de Dialogflow Messenger
+    const inputField = document.querySelector("df-messenger").shadowRoot
+      .querySelector("df-messenger-chat")
+      .shadowRoot.querySelector("df-message-list")
+      .shadowRoot.querySelector("textarea");
+
+    if (inputField) {
+      inputField.value = text;
+
+      // Simula presionar Enter
+      const enterEvent = new KeyboardEvent("keydown", {
+        bubbles: true,
+        cancelable: true,
+        keyCode: 13
+      });
+      inputField.dispatchEvent(enterEvent);
+    }
+
+    micBtn.style.background = "#ff6f61";
+    micBtn.innerHTML = "🎤 Hablar";
+    isListening = false;
+  };
+
+  recognizer.onerror = (event) => {
+    console.error("Error en reconocimiento:", event.error);
+    micBtn.style.background = "#e53935";
+    micBtn.innerHTML = "❌ Error";
+    isListening = false;
+  };
+});
+</script>
+
+
 
 </body>
 </html>
