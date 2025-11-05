@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chat de Juan 🤖</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <header>
@@ -11,7 +12,6 @@
     <p>Puedes hacer preguntas sobre el documento cargado en Google Cloud.</p>
   </header>
 
-  <button id="micButton">🎤</button>
   <link rel="stylesheet" href="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/themes/df-messenger-default.css">
     <script src="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/df-messenger.js"></script>
         <df-messenger
@@ -26,7 +26,7 @@
     <style>
         body {
             font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #0d0d0d, #1a1a1a);
+            background: linear-gradient(135deg, #0d0d0d, #1a1a1a); /* fondo oscuro */
             text-align: center;
             padding-top: 80px;
             color: #f0f0f0;
@@ -43,7 +43,7 @@
         }
 
         h1 {
-            color: #ff6f61;
+            color: #ff6f61; /* naranja vibrante */
             font-size: 3em;
             text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
             margin-bottom: 20px;
@@ -51,13 +51,13 @@
         }
 
         h1:hover {
-            color: #ffca28;
+            color: #ffca28; /* amarillo brillante */
             transform: scale(1.1);
         }
 
         p {
             font-size: 1.2em;
-            color: #b0bec5;
+            color: #b0bec5; /* gris claro */
             line-height: 1.6;
             max-width: 600px;
             text-shadow: 1px 1px 4px rgba(0,0,0,0.3);
@@ -65,8 +65,11 @@
         }
 
         p:hover {
-            color: #ff6f61;
+            color: #ff6f61; /* naranja al pasar el mouse */
         }
+
+
+
 
         df-messenger {
             z-index: 999;
@@ -79,171 +82,8 @@
             bottom: 16px;
             right: 16px;
         }
-
-
-        /* Estilos para el botón del micrófono */
-        #micButton {
-            display: block; /* Oculto por defecto */
-            position: fixed;
-            bottom: 85px; 
-            right: 20px;
-            z-index: 1000;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background-color: #ff6f61;
-            color: white;
-            font-size: 24px;
-            border: none;
-            cursor: pointer;
-            box-shadow: 2px 2px 8px rgba(0,0,0,0.5);
-            transition: background-color 0.3s, transform 0.2s;
-        }
-
-        #micButton:hover {
-            background-color: #ffca28;
-            transform: scale(1.1);
-        }
-        
-        #micButton.is-recording {
-            background-color: #e53935;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(229, 57, 53, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(229, 57, 53, 0); }
-        }
     </style>
 
-
-    <script>
-        window.addEventListener('load', () => {
-            console.log("Página cargada. Esperando que Dialogflow Messenger se inicialice...");
-            
-            const dfMessenger = document.querySelector('df-messenger');
-
-            if (!dfMessenger) {
-                console.error("No se encontró <df-messenger> en la página.");
-                return;
-            }
-
-            // ⭐ ¡ESTA ES LA SOLUCIÓN! ⭐
-            // Escuchamos el evento que Dialogflow emite cuando está listo.
-            dfMessenger.addEventListener('df-messenger-loaded', () => {
-                console.log("✅ ¡Dialogflow Messenger está listo!");
-                
-                const micButton = document.getElementById('micButton');
-
-                // Ahora que DF está listo, BUSCAMOS la burbuja dentro de su Shadow DOM
-                if (!dfMessenger.shadowRoot) {
-                    console.error("Error: DF Messenger cargado pero no tiene shadowRoot.");
-                    return; 
-                }
-
-                const chatBubble = dfMessenger.shadowRoot.querySelector('df-messenger-chat-bubble');
-
-                if (!chatBubble) {
-                    console.error("Error: No se pudo encontrar la burbuja (df-messenger-chat-bubble) incluso después de la carga.");
-                    return;
-                }
-
-                console.log("Burbuja del chat encontrada con éxito 👍");
-                micButton.style.display = 'block'; // Mostrar el botón del micro
-
-                // --- INICIO: Lógica del Micrófono (ahora dentro del evento) ---
-                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-                if (SpeechRecognition) {
-                    const recognition = new SpeechRecognition();
-                    recognition.lang = 'es-419'; 
-                    recognition.interimResults = false;
-                    recognition.maxAlternatives = 1;
-
-                    micButton.addEventListener('click', () => {
-                        // Simulamos clic en la burbuja para abrirla
-                        chatBubble.click();
-                        
-                        try {
-                            recognition.start();
-                            micButton.classList.add('is-recording');
-                            micButton.disabled = true;
-                        } catch(e) {
-                            console.error("Error al iniciar el micrófono:", e);
-                        }
-                    });
-
-                    recognition.onresult = (event) => {
-                        const transcript = event.results[0][0].transcript;
-                        console.log("Texto reconocido:", transcript);
-
-                        // La función 'trySendMessage' no cambia, ya estaba bien.
-                        const trySendMessage = () => {
-                            const dfMessengerEl = document.querySelector('df-messenger');
-                            if (!dfMessengerEl || !dfMessengerEl.shadowRoot) {
-                                console.error("❌ df-messenger aún no está listo");
-                                return false;
-                            }
-
-                            const chat = dfMessengerEl.shadowRoot.querySelector('df-messenger-chat'); 
-                            if (!chat || !chat.shadowRoot) {
-                                console.warn("⌛ Esperando que cargue df-messenger-chat...");
-                                return false;
-                            }
-
-                            const inputField = chat.shadowRoot.querySelector('df-messenger-user-input');
-                            if (!inputField || !inputField.shadowRoot) {
-                                console.warn("⌛ Esperando el campo de entrada del chat...");
-                                return false;
-                            }
-
-                            const input = inputField.shadowRoot.querySelector('input');
-                            if (input) {
-                                input.value = transcript;
-                                input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
-                                console.log("✅ Mensaje enviado al chat:", transcript);
-                                return true;
-                            }
-
-                            console.error("❌ No se encontró el campo <input> dentro del widget");
-                            return false;
-                        };
-
-                        // Reintentar (esto tampoco cambió, ya estaba bien)
-                        let attempts = 0;
-                        const interval = setInterval(() => {
-                            attempts++;
-                            if (trySendMessage() || attempts > 10) {
-                                clearInterval(interval);
-                                if (attempts > 10) console.error("⛔ Tiempo de espera agotado para encontrar el campo del chat");
-                            }
-                        }, 500);
-                    };
-
-                    recognition.onend = () => {
-                        micButton.classList.remove('is-recording');
-                        micButton.disabled = false;
-                    };
-
-                    recognition.onerror = (event) => {
-                        console.error("Error en reconocimiento:", event.error);
-                        micButton.classList.remove('is-recording');
-                        micButton.disabled = false;
-                        if(event.error === 'not-allowed') {
-                            alert("Debes permitir el uso del micrófono 🔊");
-                        }
-                    };
-                } else {
-                    alert("Tu navegador no soporta reconocimiento de voz.");
-                    micButton.style.display = 'none';
-                }
-                // --- FIN: Lógica del Micrófono ---
-
-            }); // Fin del listener 'df-messenger-loaded'
-
-        }); // Fin del listener 'window.load'
-    </script>
 
 </body>
 </html>
