@@ -120,55 +120,130 @@
 
     <script>
         window.addEventListener('load', () => {
-            console.log("Script de micrófono cargado ✅");
-            const micButton = document.getElementById('micButton');
+            console.log("Página cargada. Esperando que Dialogflow Messenger se inicialice...");
+            
             const dfMessenger = document.querySelector('df-messenger');
 
-            micButton.style.display = 'block'; // Mostrar siempre el botón para probar
-
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-            if (SpeechRecognition) {
-                const recognition = new SpeechRecognition();
-                recognition.lang = 'es-ES';
-                recognition.interimResults = false;
-                recognition.maxAlternatives = 1;
-
-                micButton.addEventListener('click', () => {
-                    try {
-                        recognition.start();
-                        micButton.classList.add('is-recording');
-                        micButton.disabled = true;
-                    } catch(e) {
-                        console.error("Error al iniciar el micrófono:", e);
-                    }
-                });
-
-                recognition.onresult = (event) => {
-                    const transcript = event.results[0][0].transcript;
-                    console.log("Texto reconocido:", transcript);
-                    dfMessenger.sendQuery(transcript);
-                };
-
-                recognition.onend = () => {
-                    micButton.classList.remove('is-recording');
-                    micButton.disabled = false;
-                };
-
-                recognition.onerror = (event) => {
-                    console.error("Error en reconocimiento:", event.error);
-                    micButton.classList.remove('is-recording');
-                    micButton.disabled = false;
-                    if(event.error === 'not-allowed') {
-                        alert("Debes permitir el uso del micrófono 🔊");
-                    }
-                };
-            } else {
-                alert("Tu navegador no soporta reconocimiento de voz.");
-                micButton.style.display = 'none';
+            if (!dfMessenger) {
+                console.error("No se encontró <df-messenger> en la página.");
+                return;
             }
-        });
-</script>
+
+            // ⭐ ¡ESTA ES LA SOLUCIÓN! ⭐
+            // Escuchamos el evento que Dialogflow emite cuando está listo.
+            dfMessenger.addEventListener('df-messenger-loaded', () => {
+                console.log("✅ ¡Dialogflow Messenger está listo!");
+                
+                const micButton = document.getElementById('micButton');
+
+                // Ahora que DF está listo, BUSCAMOS la burbuja dentro de su Shadow DOM
+                if (!dfMessenger.shadowRoot) {
+                    console.error("Error: DF Messenger cargado pero no tiene shadowRoot.");
+                    return; 
+                }
+
+                const chatBubble = dfMessenger.shadowRoot.querySelector('df-messenger-chat-bubble');
+
+                if (!chatBubble) {
+                    console.error("Error: No se pudo encontrar la burbuja (df-messenger-chat-bubble) incluso después de la carga.");
+                    return;
+                }
+
+                console.log("Burbuja del chat encontrada con éxito 👍");
+                micButton.style.display = 'block'; // Mostrar el botón del micro
+
+                // --- INICIO: Lógica del Micrófono (ahora dentro del evento) ---
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+                if (SpeechRecognition) {
+                    const recognition = new SpeechRecognition();
+                    recognition.lang = 'es-419'; 
+                    recognition.interimResults = false;
+                    recognition.maxAlternatives = 1;
+
+                    micButton.addEventListener('click', () => {
+                        // Simulamos clic en la burbuja para abrirla
+                        chatBubble.click();
+                        
+                        try {
+                            recognition.start();
+                            micButton.classList.add('is-recording');
+                            micButton.disabled = true;
+                        } catch(e) {
+                            console.error("Error al iniciar el micrófono:", e);
+                        }
+                    });
+
+                    recognition.onresult = (event) => {
+                        const transcript = event.results[0][0].transcript;
+                        console.log("Texto reconocido:", transcript);
+
+                        // La función 'trySendMessage' no cambia, ya estaba bien.
+                        const trySendMessage = () => {
+                            const dfMessengerEl = document.querySelector('df-messenger');
+                            if (!dfMessengerEl || !dfMessengerEl.shadowRoot) {
+                                console.error("❌ df-messenger aún no está listo");
+                                return false;
+                            }
+
+                            const chat = dfMessengerEl.shadowRoot.querySelector('df-messenger-chat'); 
+                            if (!chat || !chat.shadowRoot) {
+                                console.warn("⌛ Esperando que cargue df-messenger-chat...");
+                                return false;
+                            }
+
+                            const inputField = chat.shadowRoot.querySelector('df-messenger-user-input');
+                            if (!inputField || !inputField.shadowRoot) {
+                                console.warn("⌛ Esperando el campo de entrada del chat...");
+                                return false;
+                            }
+
+                            const input = inputField.shadowRoot.querySelector('input');
+                            if (input) {
+                                input.value = transcript;
+                                input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+                                console.log("✅ Mensaje enviado al chat:", transcript);
+                                return true;
+                            }
+
+                            console.error("❌ No se encontró el campo <input> dentro del widget");
+                            return false;
+                        };
+
+                        // Reintentar (esto tampoco cambió, ya estaba bien)
+                        let attempts = 0;
+                        const interval = setInterval(() => {
+                            attempts++;
+                            if (trySendMessage() || attempts > 10) {
+                                clearInterval(interval);
+                                if (attempts > 10) console.error("⛔ Tiempo de espera agotado para encontrar el campo del chat");
+                            }
+                        }, 500);
+                    };
+
+                    recognition.onend = () => {
+                        micButton.classList.remove('is-recording');
+                        micButton.disabled = false;
+                    };
+
+                    recognition.onerror = (event) => {
+                        console.error("Error en reconocimiento:", event.error);
+                        micButton.classList.remove('is-recording');
+                        micButton.disabled = false;
+                        if(event.error === 'not-allowed') {
+                            alert("Debes permitir el uso del micrófono 🔊");
+                        }
+                    };
+                } else {
+                    alert("Tu navegador no soporta reconocimiento de voz.");
+                    micButton.style.display = 'none';
+                }
+                // --- FIN: Lógica del Micrófono ---
+
+            }); // Fin del listener 'df-messenger-loaded'
+
+        }); // Fin del listener 'window.load'
+    </script>
 
 </body>
 </html>
